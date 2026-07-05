@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Operux — CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #000000;
+    --panel: #0D0D0D;
+    --panel-2: #161616;
+    --border: #2A2A2A;
+    --text: #FFFFFF;
+    --muted: #8E8E8E;
+    --teal: #E0231F;
+    --lime: #FFFFFF;
+    --danger: #E0231F;
+    --amber: #F5B942;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(224,35,31,0.10), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(224,35,31,0.06), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+  ::selection{ background: rgba(224,35,31,0.35); }
+
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .display{ font-family:'Space Grotesk', sans-serif; }
+
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .node-field{
+    position:absolute; inset:0; opacity:0.35; pointer-events:none;
+  }
+  .node-field svg{ width:100%; height:100%; }
+  .login-card{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:400px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:36px 32px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .login-brand{
+    display:flex; align-items:center; gap:12px; margin-bottom:6px;
+  }
+  .brand-dot{
+    width:10px; height:10px; border-radius:50%;
+    background:var(--teal);
+    box-shadow:0 0 12px var(--teal);
+  }
+  .brand-logo{
+    width:34px; height:34px; object-fit:contain;
+    filter:drop-shadow(0 0 8px rgba(224,35,31,0.5));
+  }
+  .brand-logo-sm{
+    width:22px; height:22px; object-fit:contain;
+  }
+  .login-card h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:1.5rem;
+    margin:0;
+    letter-spacing:-0.02em;
+  }
+  .login-sub{
+    color:var(--muted);
+    font-size:0.85rem;
+    margin:6px 0 26px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--muted); margin-bottom:6px;
+  }
+  input[type=email], input[type=password], input[type=text], input[type=number], select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:11px 13px;
+    font-size:0.92rem;
+    font-family:'Inter', sans-serif;
+    outline:none;
+    transition:border-color 0.15s;
+  }
+  input:focus, select:focus{
+    border-color:var(--teal);
+  }
+  .btn{
+    width:100%;
+    background:var(--teal);
+    color:#FFFFFF;
+    border:none;
+    border-radius:8px;
+    padding:12px;
+    font-size:0.92rem;
+    font-weight:600;
+    font-family:'Inter', sans-serif;
+    cursor:pointer;
+    transition:transform 0.1s, box-shadow 0.15s;
+  }
+  .btn:hover{ box-shadow:0 0 0 3px rgba(224,35,31,0.3); }
+  .btn:active{ transform:scale(0.98); }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn-ghost:hover{ border-color:var(--teal); box-shadow:none; }
+  .btn-danger{ background:var(--danger); color:#FFFFFF; }
+  .toggle-row{
+    text-align:center; margin-top:18px; font-size:0.85rem; color:var(--muted);
+  }
+  .toggle-row a{ color:var(--teal); cursor:pointer; text-decoration:none; }
+  #auth-error{
+    color:var(--danger); font-size:0.82rem; margin-top:10px; min-height:1em;
+  }
+
+  #app-screen{ display:none; }
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+    border-bottom:1px solid var(--border);
+    background:rgba(18,24,32,0.6);
+    backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:10;
+  }
+  .logo-mark{ display:flex; align-items:center; gap:10px; }
+  .logo-mark .brand-dot{ width:9px; height:9px; }
+  .logo-mark span{ font-family:'Space Grotesk'; font-weight:600; letter-spacing:-0.01em; }
+  .user-chip{ display:flex; align-items:center; gap:12px; }
+  .user-chip span{ color:var(--muted); font-size:0.82rem; }
+  .icon-btn{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
+    padding:8px 14px; border-radius:7px; font-size:0.8rem; cursor:pointer;
+    font-family:'Inter';
+  }
+  .icon-btn:hover{ color:var(--text); border-color:var(--danger); }
+
+  main{ max-width:1080px; margin:0 auto; padding:32px 24px 80px; }
+
+  .pipeline{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:0;
+    margin-bottom:40px;
+  }
+  .pipeline::before{
+    content:'';
+    position:absolute;
+    top:34px; left:16.6%; right:16.6%; height:2px;
+    background:linear-gradient(90deg, var(--teal), var(--lime), var(--teal));
+    background-size:200% 100%;
+    animation:flow 3s linear infinite;
+    opacity:0.5;
+    z-index:0;
+  }
+  @keyframes flow{
+    0%{ background-position:0% 0; }
+    100%{ background-position:-200% 0; }
+  }
+  .metric{
+    position:relative; z-index:1;
+    padding:0 16px;
+    text-align:center;
+  }
+  .metric-node{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--panel); border:2px solid var(--teal);
+    margin:0 auto 18px;
+    box-shadow:0 0 0 6px var(--bg);
+  }
+  .metric-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size:2.1rem; font-weight:700; letter-spacing:-0.02em;
+    line-height:1;
+  }
+  .metric-value.lime{ color:var(--lime); }
+  .metric-value.teal{ color:var(--teal); }
+  .metric-label{
+    color:var(--muted); font-size:0.75rem; text-transform:uppercase;
+    letter-spacing:0.08em; margin-top:8px;
+  }
+
+  @media (max-width:640px){
+    .pipeline{ grid-template-columns:1fr; gap:28px; }
+    .pipeline::before{ display:none; }
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:24px;
+    margin-bottom:28px;
+  }
+  .panel-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .panel-header h2{
+    font-family:'Space Grotesk'; font-size:1.05rem; margin:0; font-weight:600;
+  }
+  .eyebrow{
+    color:var(--teal); font-size:0.7rem; text-transform:uppercase;
+    letter-spacing:0.1em; font-weight:600; margin-bottom:4px; display:block;
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr 0.8fr 1fr;
+    gap:14px;
+    align-items:end;
+  }
+  .form-grid .field{ margin-bottom:0; }
+  .checkbox-field{
+    display:flex; align-items:center; gap:8px; padding-bottom:11px;
+  }
+  .checkbox-field input{ width:18px; height:18px; accent-color:var(--teal); }
+  .checkbox-field label{ margin:0; font-size:0.82rem; color:var(--text); text-transform:none; letter-spacing:0; }
+  @media (max-width:900px){
+    .form-grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  thead th{
+    text-align:left; color:var(--muted); font-size:0.72rem;
+    text-transform:uppercase; letter-spacing:0.06em;
+    padding:10px 12px; border-bottom:1px solid var(--border);
+    font-weight:600;
+  }
+  tbody td{
+    padding:14px 12px; border-bottom:1px solid rgba(35,44,55,0.6);
+    vertical-align:middle;
+  }
+  tbody tr:hover{ background:rgba(224,35,31,0.03); }
+  .biz-name{ font-weight:600; }
+  .biz-industry{ color:var(--muted); font-size:0.8rem; }
+  .tag{
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:0.72rem; font-weight:600;
+  }
+  .tag.yes{ background:rgba(224,35,31,0.18); color:var(--text); border:1px solid var(--teal); }
+  .tag.no{ background:rgba(124,138,153,0.15); color:var(--muted); }
+  .row-actions{ display:flex; gap:8px; }
+  .row-actions button{
+    background:none; border:1px solid var(--border); color:var(--muted);
+    border-radius:6px; padding:5px 10px; font-size:0.75rem; cursor:pointer;
+    font-family:'Inter';
+  }
+  .row-actions button:hover{ color:var(--text); border-color:var(--teal); }
+  .row-actions button.del:hover{ color:var(--danger); border-color:var(--danger); }
+  .empty-state{
+    text-align:center; padding:50px 20px; color:var(--muted);
+  }
+
+  #app-error{ color:var(--danger); font-size:0.82rem; margin-top:10px; }
+  .hidden{ display:none !important; }
+
+  .loading-dots{ display:flex; gap:5px; justify-content:center; padding:40px; }
+  .loading-dots span{
+    width:8px; height:8px; border-radius:50%; background:var(--teal);
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  .loading-dots span:nth-child(2){ animation-delay:0.15s; }
+  .loading-dots span:nth-child(3){ animation-delay:0.3s; }
+  @keyframes pulse{ 0%,80%,100%{ opacity:0.2; transform:scale(0.8);} 40%{ opacity:1; transform:scale(1);} }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="node-field">
+    <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+      <g stroke="#E0231F" stroke-width="1">
+        <line x1="60" y1="80" x2="240" y2="160"/>
+        <line x1="240" y1="160" x2="420" y2="90"/>
+        <line x1="420" y1="90" x2="620" y2="180"/>
+        <line x1="120" y1="380" x2="320" y2="320"/>
+        <line x1="320" y1="320" x2="520" y2="420"/>
+        <line x1="520" y1="420" x2="720" y2="360"/>
+        <line x1="240" y1="160" x2="320" y2="320"/>
+      </g>
+      <g fill="#E0231F">
+        <circle cx="60" cy="80" r="4"/>
+        <circle cx="240" cy="160" r="4"/>
+        <circle cx="420" cy="90" r="4"/>
+        <circle cx="620" cy="180" r="4"/>
+        <circle cx="120" cy="380" r="4"/>
+        <circle cx="320" cy="320" r="4"/>
+        <circle cx="520" cy="420" r="4"/>
+        <circle cx="720" cy="360" r="4"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="logo.png" alt="Operux" class="brand-logo"/>
+      <h1>Operux</h1>
+    </div>
+    <p class="login-sub" id="auth-subtitle">Inicia sesión para ver tu pipeline de clientes</p>
+
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="email-input" placeholder="tucorreo@ejemplo.com" autocomplete="email"/>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="password-input" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+
+    <button class="btn" id="auth-submit-btn">Iniciar sesión</button>
+    <div id="auth-error"></div>
+
+    <div class="toggle-row">
+      <span id="toggle-text">¿No tienes cuenta?</span> <a id="toggle-link">Regístrate</a>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <header class="topbar">
+    <div class="logo-mark">
+      <img src="logo.png" alt="Operux" class="brand-logo-sm"/>
+      <span>Operux · CRM</span>
+    </div>
+    <div class="user-chip">
+      <span id="user-email-label"></span>
+      <button class="icon-btn" id="logout-btn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="pipeline">
+      <div class="metric">
+        <div class="metric-node"></div>
+        <div class="metric-value teal mono" id="metric-revenue">$0</div>
+        <div class="metric-label">Ingresos totales</div>
+      </div>
+      <div class="metric">
+        <div class="metric-node"></div>
+        <div class="metric-value lime mono" id="metric-retainer-pct">0%</div>
+        <div class="metric-label">% con retainer</div>
+      </div>
+      <div class="metric">
+        <div class="metric-node"></div>
+        <div class="metric-value teal mono" id="metric-count">0</div>
+        <div class="metric-label">Negocios totales</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <span class="eyebrow" id="form-eyebrow">Nuevo registro</span>
+          <h2 id="form-title">Agregar negocio</h2>
+        </div>
+        <button class="btn-ghost icon-btn hidden" id="cancel-edit-btn">Cancelar edición</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Nombre del negocio</label>
+          <input type="text" id="f-name" placeholder="Panadería El Trigo"/>
+        </div>
+        <div class="field">
+          <label>Industria</label>
+          <input type="text" id="f-industry" placeholder="Alimentos"/>
+        </div>
+        <div class="field">
+          <label>Ingreso ($)</label>
+          <input type="number" id="f-revenue" placeholder="1500" min="0" step="0.01"/>
+        </div>
+        <div class="field">
+          <label># Proyectos</label>
+          <input type="number" id="f-projects" placeholder="1" min="0" step="1"/>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="f-retainer"/>
+          <label for="f-retainer">Paga retainer mensual</label>
+        </div>
+      </div>
+      <div style="margin-top:18px; display:flex; gap:12px;">
+        <button class="btn" style="width:auto; padding:11px 22px;" id="save-btn">Agregar negocio</button>
+      </div>
+      <div id="app-error"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <span class="eyebrow">Registro</span>
+          <h2>Negocios</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Negocio</th>
+              <th>Ingreso</th>
+              <th>Proyectos</th>
+              <th>Retainer</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="biz-tbody"></tbody>
+        </table>
+        <div class="empty-state hidden" id="empty-state">
+          <div>Aún no tienes negocios registrados.</div>
+          <div style="font-size:0.8rem; margin-top:4px;">Agrega el primero arriba para empezar a ver tus métricas.</div>
+        </div>
+        <div class="loading-dots" id="loading-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+    signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+    onSnapshot, query
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBIgS2CtSh_hgzo_P05JxHzx3YuGdyxxus",
+    authDomain: "crm-operux-clientes.firebaseapp.com",
+    projectId: "crm-operux-clientes",
+    storageBucket: "crm-operux-clientes.firebasestorage.app",
+    messagingSenderId: "586524740767",
+    appId: "1:586524740767:web:2ae6dcf7971a002d6e26aa"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let isRegisterMode = false;
+  let currentUser = null;
+  let unsubscribeSnapshot = null;
+  let editingId = null;
+
+  const loginScreen = document.getElementById('login-screen');
+  const appScreen = document.getElementById('app-screen');
+  const emailInput = document.getElementById('email-input');
+  const passwordInput = document.getElementById('password-input');
+  const authSubmitBtn = document.getElementById('auth-submit-btn');
+  const authError = document.getElementById('auth-error');
+  const toggleLink = document.getElementById('toggle-link');
+  const toggleText = document.getElementById('toggle-text');
+  const authSubtitle = document.getElementById('auth-subtitle');
+  const userEmailLabel = document.getElementById('user-email-label');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const fName = document.getElementById('f-name');
+  const fIndustry = document.getElementById('f-industry');
+  const fRevenue = document.getElementById('f-revenue');
+  const fProjects = document.getElementById('f-projects');
+  const fRetainer = document.getElementById('f-retainer');
+  const saveBtn = document.getElementById('save-btn');
+  const cancelEditBtn = document.getElementById('cancel-edit-btn');
+  const formTitle = document.getElementById('form-title');
+  const formEyebrow = document.getElementById('form-eyebrow');
+  const appError = document.getElementById('app-error');
+
+  const tbody = document.getElementById('biz-tbody');
+  const emptyState = document.getElementById('empty-state');
+  const loadingIndicator = document.getElementById('loading-indicator');
+
+  const metricRevenue = document.getElementById('metric-revenue');
+  const metricRetainerPct = document.getElementById('metric-retainer-pct');
+  const metricCount = document.getElementById('metric-count');
+
+  toggleLink.addEventListener('click', () => {
+    isRegisterMode = !isRegisterMode;
+    if(isRegisterMode){
+      authSubmitBtn.textContent = 'Crear cuenta';
+      authSubtitle.textContent = 'Crea tu cuenta para empezar a usar tu CRM';
+      toggleText.textContent = '¿Ya tienes cuenta?';
+      toggleLink.textContent = 'Inicia sesión';
+    } else {
+      authSubmitBtn.textContent = 'Iniciar sesión';
+      authSubtitle.textContent = 'Inicia sesión para ver tu pipeline de clientes';
+      toggleText.textContent = '¿No tienes cuenta?';
+      toggleLink.textContent = 'Regístrate';
+    }
+    authError.textContent = '';
+  });
+
+  authSubmitBtn.addEventListener('click', async () => {
+    authError.textContent = '';
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if(!email || !password){
+      authError.textContent = 'Ingresa correo y contraseña.';
+      return;
+    }
+    authSubmitBtn.disabled = true;
+    try{
+      if(isRegisterMode){
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    }catch(err){
+      authError.textContent = translateAuthError(err.code);
+    }finally{
+      authSubmitBtn.disabled = false;
+    }
+  });
+
+  function translateAuthError(code){
+    const map = {
+      'auth/invalid-email': 'Correo electrónico inválido.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.'
+    };
+    return map[code] || 'Ocurrió un error. Intenta de nuevo.';
+  }
+
+  logoutBtn.addEventListener('click', () => signOut(auth));
+
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if(user){
+      loginScreen.style.display = 'none';
+      appScreen.style.display = 'block';
+      userEmailLabel.textContent = user.email;
+      subscribeToBusinesses(user.uid);
+    } else {
+      loginScreen.style.display = 'flex';
+      appScreen.style.display = 'none';
+      if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      tbody.innerHTML = '';
+    }
+  });
+
+  function subscribeToBusinesses(uid){
+    if(unsubscribeSnapshot) unsubscribeSnapshot();
+    const businessesRef = collection(db, 'users', uid, 'businesses');
+    const q = query(businessesRef);
+    loadingIndicator.classList.remove('hidden');
+    unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+      loadingIndicator.classList.add('hidden');
+      const businesses = [];
+      snapshot.forEach(docSnap => {
+        businesses.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      renderBusinesses(businesses);
+      renderMetrics(businesses);
+    }, (err) => {
+      loadingIndicator.classList.add('hidden');
+      appError.textContent = 'Error al cargar datos: ' + err.message;
+    });
+  }
+
+  function fmtMoney(n){
+    return '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+  }
+
+  function renderMetrics(businesses){
+    const totalRevenue = businesses.reduce((sum, b) => sum + (Number(b.revenue) || 0), 0);
+    const total = businesses.length;
+    const withRetainer = businesses.filter(b => b.retainer).length;
+    const pct = total > 0 ? Math.round((withRetainer / total) * 100) : 0;
+
+    metricRevenue.textContent = fmtMoney(totalRevenue);
+    metricRetainerPct.textContent = pct + '%';
+    metricCount.textContent = total;
+  }
+
+  function renderBusinesses(businesses){
+    tbody.innerHTML = '';
+    if(businesses.length === 0){
+      emptyState.classList.remove('hidden');
+      return;
+    }
+    emptyState.classList.add('hidden');
+
+    businesses.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="biz-name">${escapeHtml(b.name)}</div>
+          <div class="biz-industry">${escapeHtml(b.industry || '—')}</div>
+        </td>
+        <td class="mono">${fmtMoney(b.revenue)}</td>
+        <td class="mono">${Number(b.projects) || 0}</td>
+        <td><span class="tag ${b.retainer ? 'yes' : 'no'}">${b.retainer ? 'Sí' : 'No'}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="edit" data-id="${b.id}">Editar</button>
+            <button class="del" data-id="${b.id}">Eliminar</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      tr.querySelector('.edit').addEventListener('click', () => startEdit(b));
+      tr.querySelector('.del').addEventListener('click', () => deleteBusiness(b.id));
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  function startEdit(business){
+    editingId = business.id;
+    fName.value = business.name || '';
+    fIndustry.value = business.industry || '';
+    fRevenue.value = business.revenue || '';
+    fProjects.value = business.projects || '';
+    fRetainer.checked = !!business.retainer;
+
+    formTitle.textContent = 'Editar negocio';
+    formEyebrow.textContent = 'Modo edición';
+    saveBtn.textContent = 'Guardar cambios';
+    cancelEditBtn.classList.remove('hidden');
+    fName.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  function resetForm(){
+    editingId = null;
+    fName.value = '';
+    fIndustry.value = '';
+    fRevenue.value = '';
+    fProjects.value = '';
+    fRetainer.checked = false;
+    formTitle.textContent = 'Agregar negocio';
+    formEyebrow.textContent = 'Nuevo registro';
+    saveBtn.textContent = 'Agregar negocio';
+    cancelEditBtn.classList.add('hidden');
+    appError.textContent = '';
+  }
+
+  cancelEditBtn.addEventListener('click', resetForm);
+
+  saveBtn.addEventListener('click', async () => {
+    appError.textContent = '';
+    const name = fName.value.trim();
+    const industry = fIndustry.value.trim();
+    const revenue = parseFloat(fRevenue.value) || 0;
+    const projects = parseInt(fProjects.value) || 0;
+    const retainer = fRetainer.checked;
+
+    if(!name){
+      appError.textContent = 'El nombre del negocio es obligatorio.';
+      return;
+    }
+    if(!currentUser) return;
+
+    saveBtn.disabled = true;
+    try{
+      const businessesRef = collection(db, 'users', currentUser.uid, 'businesses');
+      const data = { name, industry, revenue, projects, retainer, updatedAt: Date.now() };
+
+      if(editingId){
+        await updateDoc(doc(db, 'users', currentUser.uid, 'businesses', editingId), data);
+      } else {
+        data.createdAt = Date.now();
+        await addDoc(businessesRef, data);
+      }
+      resetForm();
+    }catch(err){
+      appError.textContent = 'Error al guardar: ' + err.message;
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
+
+  async function deleteBusiness(id){
+    if(!currentUser) return;
+    if(!confirm('¿Eliminar este negocio? Esta acción no se puede deshacer.')) return;
+    try{
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'businesses', id));
+      if(editingId === id) resetForm();
+    }catch(err){
+      appError.textContent = 'Error al eliminar: ' + err.message;
+    }
+  }
+</script>
+</body>
+</html>
